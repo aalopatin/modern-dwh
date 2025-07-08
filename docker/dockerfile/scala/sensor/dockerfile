@@ -1,0 +1,3 @@
+FROM openjdk:21-jdk
+COPY sensor.jar /app/sensor.jar
+ENTRYPOINT ["java", "-Dconfig.file=/application.conf", "-jar", "/app/sensor.jar"]
