@@ -1,4 +1,26 @@
 name: mdwh
+
+x-sensor-defaults: &sensor-defaults
+  image: mdwh/sensor-scala:latest
+  depends_on:
+    broker-1:
+      condition: service_healthy
+    broker-2:
+      condition: service_healthy
+    broker-3:
+      condition: service_healthy
+    schema-registry:
+      condition: service_healthy
+  environment:
+    KAFKA_TOPIC: sensors
+    KAFKA_BOOTSTRAP_SERVERS: broker-1:9091, broker-2:9091, broker-3:9091
+    KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  volumes:
+    - ./volumes/sensors/application.conf:/application.conf
+    - ./volumes/sensors/checkpoints:/checkpoints
+  networks:
+    - mdwh-network
+
 services:
   controller-1:
     image: apache/kafka:latest
@@ -13,7 +35,9 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_METADATA_LOG_DIR: /tmp/kafka/meta
     volumes:
-      - ./meta/controller-1:/tmp/kafka/meta
+      - ./volumes/kafka/meta/controller-1:/tmp/kafka/meta
+    networks:
+      - mdwh-network
   controller-2:
     image: apache/kafka:latest
     container_name: controller-2
@@ -27,7 +51,9 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_METADATA_LOG_DIR: /tmp/kafka/meta
     volumes:
-      - ./meta/controller-2:/tmp/kafka/meta
+      - ./volumes/kafka/meta/controller-2:/tmp/kafka/meta
+    networks:
+      - mdwh-network
   controller-3:
     image: apache/kafka:latest
     container_name: controller-3
@@ -41,7 +67,9 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_METADATA_LOG_DIR: /tmp/kafka/meta
     volumes:
-      - ./meta/controller-3:/tmp/kafka/meta
+      - ./volumes/kafka/meta/controller-3:/tmp/kafka/meta
+    networks:
+      - mdwh-network
   broker-1:
     image: apache/kafka:latest
     container_name: broker-1
@@ -68,7 +96,9 @@ services:
       - controller-2
       - controller-3
     volumes:
-      - ./data/broker-1:/tmp/kafka/data
+      - ./volumes/kafka/data/broker-1:/tmp/kafka/data
+    networks:
+      - mdwh-network
   broker-2:
     image: apache/kafka:latest
     container_name: broker-2
@@ -95,7 +125,9 @@ services:
       - controller-2
       - controller-3
     volumes:
-      - ./data/broker-2:/tmp/kafka/data
+      - ./volumes/kafka/data/broker-2:/tmp/kafka/data
+    networks:
+      - mdwh-network
   broker-3:
     image: apache/kafka:latest
     container_name: broker-3
@@ -122,10 +154,14 @@ services:
       - controller-2
       - controller-3
     volumes:
-      - ./data/broker-3:/tmp/kafka/data
+      - ./volumes/kafka/data/broker-3:/tmp/kafka/data
+    networks:
+      - mdwh-network
   schema-registry:
     image: confluentinc/cp-schema-registry:latest
     container_name: schema-registry
+    ports:
+      - 8081:8081
     depends_on:
       broker-1:
         condition: service_started
@@ -137,8 +173,13 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://broker-1:9091,PLAINTEXT://broker-2:9091,PLAINTEXT://broker-3:9091
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-    ports:
-      - 8081:8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/subjects"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mdwh-network      
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -158,3 +199,22 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker-1:9091, broker-2:9091, broker-3:9091
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
       DYNAMIC_CONFIG_ENABLED: 'true'
+    networks:
+      - mdwh-network
+      
+  sensor-th0101:
+    <<: *sensor-defaults
+    container_name: sensor-TH0101
+    command: TH0101
+  sensor-t0102:
+    <<: *sensor-defaults
+    container_name: sensor-T0102
+    command: T0102
+  sensor-h0102:
+    <<: *sensor-defaults
+    container_name: sensor-H0102
+    command: H0102
+    
+networks:
+  mdwh-network:
+    name: mdwh-network
