@@ -1,0 +1,10 @@
+{
+	"name": "file-sink-sensors",
+	"connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+	"tasks.max": "1",
+	"topics": "sensors",
+	"file": "/tmp/kafka-connect/data/sensors.out",
+	"key.converter": "org.apache.kafka.connect.storage.StringConverter",
+	"value.converter": "io.confluent.connect.avro.AvroConverter",
+	"value.converter.schema.registry.url": "http://schema-registry:8081"
+}

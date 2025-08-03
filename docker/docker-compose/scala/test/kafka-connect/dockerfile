@@ -1,0 +1,14 @@
+FROM apache/kafka:latest
+
+WORKDIR /opt/kafka
+
+EXPOSE 8083
+
+RUN mkdir -p /opt/kafka/plugins
+RUN cp /opt/kafka/libs/connect-file-*.jar /opt/kafka/plugins/
+
+ENV CONNECT_PLUGIN_PATH=/opt/kafka/plugins
+
+COPY entrypoint.sh .
+
+ENTRYPOINT ["./entrypoint.sh"]

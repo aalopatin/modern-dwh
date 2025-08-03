@@ -96,6 +96,22 @@ services:
     <<: *sensor-defaults
     container_name: sensor-H0102
     command: H0102
+  kafka-connect:
+    build: ./kafka-connect
+    container_name: kafka-connect
+    ports:
+      - 8083:8083
+    depends_on:
+      broker:
+        condition: service_healthy
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_PLUGIN_PATH: "/opt/kafka/plugins,/opt/kafka/custom-plugins"
+    volumes:
+      - ./volumes/kafka-connect/data:/tmp/kafka-connect/data
+      - ./volumes/kafka-connect/custom-plugins:/opt/kafka/custom-plugins
+    networks:
+      - mdwh-network
 networks:
   mdwh-network:
     name: mdwh-network

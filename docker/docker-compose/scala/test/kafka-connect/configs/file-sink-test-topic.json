@@ -1,0 +1,9 @@
+{
+	"name": "file-sink-test-topic",
+	"connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+	"tasks.max": "1",
+	"topics": "test-topic",
+	"file": "/tmp/kafka-connect/data/test-topic.out",
+	"key.converter": "org.apache.kafka.connect.storage.StringConverter",
+	"value.converter": "org.apache.kafka.connect.storage.StringConverter"
+}
