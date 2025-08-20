@@ -4,3 +4,4 @@ volumes
 dependency-reduced-pom.xml
 **/dockerfile/**/*.jar
 **/dockerfile/**/*.py
+tmp
