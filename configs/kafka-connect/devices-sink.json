@@ -1,0 +1,48 @@
+{
+  "name": "devices-sink",
+  "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
+	
+	"topics": "cdc.operational_data.public.devices",
+	
+	"iceberg.control.commit.interval-ms": 10000,
+	
+	"iceberg.tables": "bronze.cdc.operational_data.devices",
+	"iceberg.tables.auto-create-enabled": true,
+	"iceberg.tables.evolve-schema-enabled": true,
+	"iceberg.table.bronze.cdc.operational_data.devices.id-columns": "device_id",
+	"iceberg.table.bronze.cdc.operational_data.devices.partition-by": "day(__ts_ms)",
+	
+	"iceberg.catalog.catalog-impl": "org.apache.iceberg.nessie.NessieCatalog",
+	"iceberg.catalog.uri": "http://nessie:19120/api/v2",
+	"iceberg.catalog.ref": "main",
+	"iceberg.catalog.warehouse": "s3a://lakehouse/",
+	"iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+	"iceberg.catalog.s3.endpoint": "http://minio:9000",
+  "iceberg.catalog.s3.path-style-access": "true",
+	
+	"iceberg.catalog.client.region": "us-east-1",
+	"iceberg.catalog.s3.access-key-id": "minioadmin",
+  "iceberg.catalog.s3.secret-access-key": "minioadmin",
+	
+	"key.converter": "io.confluent.connect.avro.AvroConverter",
+	"key.converter.schema.registry.url": "http://schema-registry:8081",
+	
+	"value.converter": "io.confluent.connect.avro.AvroConverter",
+	"value.converter.schema.registry.url": "http://schema-registry:8081",
+		
+	"transforms" : "unwrap,dropDeleted,tsConverter",
+
+	"transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState",
+	"transforms.unwrap.add.fields":"op,ts_ms",
+	"transforms.unwrap.delete.tombstone.handling.mode": "rewrite",
+	
+	"transforms.dropDeleted.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+	"transforms.dropDeleted.blacklist": "__deleted",
+	
+	"transforms.tsConverter.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+	"transforms.tsConverter.field": "__ts_ms",
+	"transforms.tsConverter.unix.precision": "milliseconds",
+	"transforms.tsConverter.target.type": "Timestamp",
+
+	"tasks.max": "1"
+}

@@ -4,6 +4,8 @@
 	
 	"topics": "sensors",
 	
+	"iceberg.control.commit.interval-ms": 10000,
+	
 	"iceberg.tables": "bronze.kafka.sensors",
 	"iceberg.tables.auto-create-enabled": true,
 	"iceberg.tables.evolve-schema-enabled": true,
